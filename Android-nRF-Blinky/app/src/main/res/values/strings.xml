@@ -29,22 +29,22 @@
   -->
 
 <resources>
-	<string name="app_name">nRF Blinky</string>
-	<string name="feature_name">BLINKY</string>
+	<string name="app_name">Skoobot</string>
+	<string name="feature_name">ROBOT</string>
 
 	<string name="title">@string/app_name</string>
 
 	<string name="unknown_device">Unknown Device</string>
 	<string name="turn_on">On</string>
 	<string name="turn_off">Off</string>
-	<string name="title_led_state">LED</string>
-	<string name="title_button_state">Button</string>
+	<string name="title_led_state">Command</string>
+	<string name="title_button_state">Data</string>
 	<string name="state">State</string>
 	<string name="button_pressed">PRESSED</string>
 	<string name="button_released">RELEASED</string>
 	<string name="button_unknown">UNKNOWN</string>
-	<string name="led_summary">Toggle the switch to turn the LED 3 on or off.</string>
-	<string name="button_summary">Press Button 1 on the dev kit.</string>
+	<string name="led_summary">Enter command to Skoobot.</string>
+	<string name="button_summary">Press Button 1 on the robot.</string>
 
 	<string name="location_permission_title">LOCATION PERMISSION REQUIRED</string>
 	<string name="location_permission_info">From Android 6.0 Marshmallow onwards the application requires Location permission in order to scan for Bluetooth Low Energy devices.
@@ -56,11 +56,11 @@
 	<string name="bluetooth_disabled_info">The Bluetooth adapter is turned off. Click the button below to enable it.</string>
 	<string name="bluetooth_disabled_action">Enable</string>
 
-	<string name="blinky_guide_title">CAN\'T SEE YOUR BLINKY?</string>
-	<string name="blinky_guide_info">1. Make sure the DK is <b>turned on</b> and is connected to a power source using a micro USB cable or a coin cell is plugged in.
-        \n\n2. Make sure the <b>ble_app_blinky</b> firmware and SoftDevice are flashed.</string>
+	<string name="blinky_guide_title">CAN\'T SEE YOUR ROBOT?</string>
+	<string name="blinky_guide_info">1. Make sure the robot is <b>turned on</b> and battery is charged using a micro USB cable.
+        \n\n2. Make sure the <b>robot app</b> firmware and SoftDevice are flashed.</string>
 	<string name="blinky_guide_location_info">3. Location is turned off. Some Android phones require it enabled in order to scan for Bluetooth LE devices.
-		If you are sure your Blinky is advertising and it doesn\'t show up here, click the button below to enable Location.</string>
+		If you are sure your robot is advertising and it doesn\'t show up here, click the button below to enable Location.</string>
 	<string name="blinky_guide_location_action">Enable</string>
 
 	<string name="state_scanning">Scanning…</string>
