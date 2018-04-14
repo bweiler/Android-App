@@ -40,6 +40,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Button;
 
 import no.nordicsemi.android.blinky.adapter.ExtendedBluetoothDevice;
 import no.nordicsemi.android.blinky.viewmodels.BlinkyViewModel;
@@ -75,7 +76,26 @@ public class BlinkyActivity extends AppCompatActivity {
 		final TextView connectionState = findViewById(R.id.connection_state);
 		final View content = findViewById(R.id.device_container);
 
-		led.setOnClickListener(view -> viewModel.toggleLED(led.isChecked()));
+		final Button left = findViewById(R.id.left);
+		final Button forward = findViewById(R.id.forward);
+		final Button back = findViewById(R.id.backward);
+		final Button right = findViewById(R.id.right);
+		final Button stop = findViewById(R.id.stop);
+
+		left.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				viewModel.toggleLED(Byte.valueOf((byte)0x11));
+			}
+		});
+		forward.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				viewModel.toggleLED(Byte.valueOf((byte)0x12));
+			}
+		});
+		back.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x13)));
+		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
+		stop.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x14)));
+
 		viewModel.isDeviceReady().observe(this, deviceReady -> {
 			progressContainer.setVisibility(View.GONE);
 			content.setVisibility(View.VISIBLE);
@@ -87,8 +107,8 @@ public class BlinkyActivity extends AppCompatActivity {
 			}
 		});
 		viewModel.getLEDState().observe(this, isOn -> {
-			ledState.setText(isOn ? R.string.turn_on : R.string.turn_off);
-			led.setChecked(isOn);
+			ledState.setText(" ");
+			led.setChecked(true);
 		});
 		viewModel.getButtonState().observe(this, pressed -> buttonState.setText(pressed ? R.string.button_pressed : R.string.button_released));
 	}

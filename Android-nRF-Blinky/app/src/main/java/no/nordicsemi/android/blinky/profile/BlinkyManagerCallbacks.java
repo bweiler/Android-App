@@ -38,5 +38,5 @@ public interface BlinkyManagerCallbacks extends BleManagerCallbacks {
 	 *
 	 * @param state true when LED was enabled, false when disabled
 	 */
-	void onDataSent(final boolean state);
+	void onDataSent(final byte state);
 }
