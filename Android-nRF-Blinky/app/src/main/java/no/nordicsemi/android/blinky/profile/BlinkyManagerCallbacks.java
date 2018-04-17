@@ -31,7 +31,7 @@ public interface BlinkyManagerCallbacks extends BleManagerCallbacks {
 	 *
 	 * @param state true if the button was pressed, false if released
 	 */
-	void onDataReceived(final boolean state);
+	void onDataReceived(final byte state);
 
 	/**
 	 * Called when the data has been sent to the connected device.

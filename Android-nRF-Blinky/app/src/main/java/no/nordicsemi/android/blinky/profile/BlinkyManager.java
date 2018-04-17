@@ -111,9 +111,9 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 				log(LogContract.Log.Level.APPLICATION, "Command " + ledOn + " ");
 				mCallbacks.onDataSent(ledOn);
 			} else {
-				final boolean buttonPressed = data == 0x01;
-				log(LogContract.Log.Level.APPLICATION, "Button " + (buttonPressed ? "pressed" : "released"));
-				mCallbacks.onDataReceived(buttonPressed);
+				final byte datain = (byte)data;
+				log(LogContract.Log.Level.APPLICATION, "Button recieved");
+				mCallbacks.onDataReceived(datain);
 			}
 		}
 
@@ -130,9 +130,9 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 		public void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// This method is only called for Button characteristic
 			final int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-			final boolean buttonPressed = data == 0x01;
-			log(LogContract.Log.Level.APPLICATION, "Button " + (buttonPressed ? "pressed" : "released"));
-			mCallbacks.onDataReceived(buttonPressed);
+			final byte datain = (byte)data;
+			log(LogContract.Log.Level.APPLICATION, "Button recieved");
+			mCallbacks.onDataReceived(datain);
 		}
 	};
 

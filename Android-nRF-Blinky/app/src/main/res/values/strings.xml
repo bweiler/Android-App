@@ -42,7 +42,7 @@
 	<string name="state">State</string>
 	<string name="button_pressed">PRESSED</string>
 	<string name="button_released">RELEASED</string>
-	<string name="button_unknown">UNKNOWN</string>
+	<string name="button_unknown">0</string>
 	<string name="led_summary">Enter command to Skoobot.</string>
 	<string name="button_summary">Press Button 1 on the robot.</string>
 

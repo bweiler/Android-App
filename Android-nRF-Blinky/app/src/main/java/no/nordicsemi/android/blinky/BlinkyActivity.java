@@ -38,7 +38,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Button;
 
@@ -69,8 +68,6 @@ public class BlinkyActivity extends AppCompatActivity {
 		viewModel.connect(device);
 
 		// Set up views
-		final TextView ledState = findViewById(R.id.led_state);
-		final Switch led = findViewById(R.id.led_switch);
 		final TextView buttonState = findViewById(R.id.button_state);
 		final LinearLayout progressContainer = findViewById(R.id.progress_container);
 		final TextView connectionState = findViewById(R.id.connection_state);
@@ -81,20 +78,15 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button back = findViewById(R.id.backward);
 		final Button right = findViewById(R.id.right);
 		final Button stop = findViewById(R.id.stop);
+		final Button distance = findViewById(R.id.distance);
+		final TextView disText = findViewById(R.id.distanceText);
 
-		left.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				viewModel.toggleLED(Byte.valueOf((byte)0x11));
-			}
-		});
-		forward.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				viewModel.toggleLED(Byte.valueOf((byte)0x12));
-			}
-		});
+		left.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x11)));
+		forward.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x12)));
 		back.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x13)));
 		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
 		stop.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x14)));
+		distance.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x22)));
 
 		viewModel.isDeviceReady().observe(this, deviceReady -> {
 			progressContainer.setVisibility(View.GONE);
@@ -106,11 +98,8 @@ public class BlinkyActivity extends AppCompatActivity {
 				finish();
 			}
 		});
-		viewModel.getLEDState().observe(this, isOn -> {
-			ledState.setText(" ");
-			led.setChecked(true);
-		});
-		viewModel.getButtonState().observe(this, pressed -> buttonState.setText(pressed ? R.string.button_pressed : R.string.button_released));
+		viewModel.getLEDState().observe(this, mLEDState -> { disText.setText(String.format("%d",mLEDState.byteValue())); });
+		viewModel.getButtonState().observe(this, mButtonState -> { buttonState.setText(String.format("%d",mButtonState.byteValue())); });
 	}
 
 	@Override

@@ -63,7 +63,7 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 	private final MutableLiveData<Byte> mLEDState = new MutableLiveData<>();
 
 	// Flag that holds the pressed released state of the button on the devkit. Pressed is true, Released is False
-	private final MutableLiveData<Boolean> mButtonState = new MutableLiveData<>();
+	private final MutableLiveData<Byte> mButtonState = new MutableLiveData<>();
 
 	public LiveData<Void> isDeviceReady() {
 		return mOnDeviceReady;
@@ -77,7 +77,7 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 		return mIsConnected;
 	}
 
-	public LiveData<Boolean> getButtonState() {
+	public LiveData<Byte> getButtonState() {
 		return mButtonState;
 	}
 
@@ -123,7 +123,7 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 	}
 
 	@Override
-	public void onDataReceived(final boolean state) {
+	public void onDataReceived(final byte state) {
 		mButtonState.postValue(state);
 	}
 
