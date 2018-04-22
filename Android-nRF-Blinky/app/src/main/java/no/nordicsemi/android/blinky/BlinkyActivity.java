@@ -79,14 +79,22 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button right = findViewById(R.id.right);
 		final Button stop = findViewById(R.id.stop);
 		final Button distance = findViewById(R.id.distance);
+		final Button rover = findViewById(R.id.rover);
+		final Button stepmode = findViewById(R.id.step_mode);
+		final Button play = findViewById(R.id.play);
+		final Button record = findViewById(R.id.record);
 		final TextView disText = findViewById(R.id.distanceText);
 
+		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
 		left.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x11)));
 		forward.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x12)));
 		back.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x13)));
-		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
 		stop.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x14)));
+		stepmode.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x16)));
+		play.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x17)));
 		distance.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x22)));
+		rover.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x40)));
+		record.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x30)));
 
 		viewModel.isDeviceReady().observe(this, deviceReady -> {
 			progressContainer.setVisibility(View.GONE);
