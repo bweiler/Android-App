@@ -83,6 +83,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button stepmode = findViewById(R.id.step_mode);
 		final Button play = findViewById(R.id.play);
 		final Button record = findViewById(R.id.record);
+		final Button RC = findViewById(R.id.RC);
 		final TextView disText = findViewById(R.id.distanceText);
 
 		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
@@ -108,6 +109,15 @@ public class BlinkyActivity extends AppCompatActivity {
 		});
 		viewModel.getLEDState().observe(this, mLEDState -> { disText.setText(String.format("%d",mLEDState.byteValue())); });
 		viewModel.getButtonState().observe(this, mButtonState -> { buttonState.setText(String.format("%d",mButtonState.byteValue())); });
+
+		RC.setOnClickListener( new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent myIntent = new Intent(BlinkyActivity.this, MainActivity.class);
+                myIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
+                BlinkyActivity.this.startActivity(myIntent);
+			}
+		});
 	}
 
 	@Override
