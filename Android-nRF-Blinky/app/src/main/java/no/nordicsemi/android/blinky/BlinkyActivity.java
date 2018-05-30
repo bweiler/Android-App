@@ -113,7 +113,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		RC.setOnClickListener( new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent myIntent = new Intent(BlinkyActivity.this, MainActivity.class);
+				Intent myIntent = new Intent(BlinkyActivity.this, ControllerActivity.class);
                 myIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
                 BlinkyActivity.this.startActivity(myIntent);
 			}
