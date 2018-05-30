@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/crossContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <!-- These layouts are just for show; they don't do any UI interactions. The text size is in DP instead of SP because it's basically text being used as graphics -->
+    <TextView
+        android:id="@+id/textViewUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="80dp"
+        android:text="↑" />
+
+    <TextView
+        android:id="@+id/textViewDn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="80dp"
+        android:text="↓" />
+
+    <TextView
+        android:id="@+id/textViewLt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:textSize="80dp"
+        android:text="←" />
+
+    <TextView
+        android:id="@+id/textViewRt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:textSize="80dp"
+        android:text="→" />
+</RelativeLayout>
