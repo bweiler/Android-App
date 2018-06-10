@@ -120,19 +120,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void robotForward() {
-        viewModel.toggleLED(Byte.valueOf((byte) 0x12)); //forward
+        viewModel.sendCMD(Byte.valueOf((byte) 0x12)); //forward
     }
     private void robotBackward() {
-        viewModel.toggleLED(Byte.valueOf((byte) 0x13)); //back
+        viewModel.sendCMD(Byte.valueOf((byte) 0x13)); //back
     }
     private void robotStop() {
-        viewModel.toggleLED(Byte.valueOf((byte) 0x14)); //stop
+        viewModel.sendCMD(Byte.valueOf((byte) 0x14)); //stop
     }
     private void robotRight() {
-        viewModel.toggleLED(Byte.valueOf((byte) 0x10));  //right
+        viewModel.sendCMD(Byte.valueOf((byte) 0x10));  //right
     }
     private void robotLeft() {
-        viewModel.toggleLED(Byte.valueOf((byte)0x11));  //left
+        viewModel.sendCMD(Byte.valueOf((byte)0x11));  //left
     }
 
 

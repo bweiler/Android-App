@@ -46,6 +46,7 @@ import no.nordicsemi.android.blinky.viewmodels.BlinkyViewModel;
 
 public class BlinkyActivity extends AppCompatActivity {
 	public static final String EXTRA_DEVICE = "no.nordicsemi.android.blinky.EXTRA_DEVICE";
+	AudioTrackPlayer myplayer;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -82,20 +83,21 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button rover = findViewById(R.id.rover);
 		final Button stepmode = findViewById(R.id.step_mode);
 		final Button play = findViewById(R.id.play);
+		final Button stopplay = findViewById(R.id.stopplay);
+		final Button buzzer = findViewById(R.id.buzzer);
 		final Button record = findViewById(R.id.record);
 		final Button RC = findViewById(R.id.RC);
 		final TextView disText = findViewById(R.id.distanceText);
 
-		right.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x10)));
-		left.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x11)));
-		forward.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x12)));
-		back.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x13)));
-		stop.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x14)));
-		stepmode.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x16)));
-		play.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x17)));
-		distance.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x22)));
-		rover.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x40)));
-		record.setOnClickListener(view -> viewModel.toggleLED(Byte.valueOf((byte)0x30)));
+		right.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x10)));
+		left.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x11)));
+		forward.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x12)));
+		back.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x13)));
+		stop.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x14)));
+		stepmode.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x16)));
+		buzzer.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x17)));
+		distance.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x22)));
+		rover.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x40)));
 
 		viewModel.isDeviceReady().observe(this, deviceReady -> {
 			progressContainer.setVisibility(View.GONE);
@@ -107,15 +109,41 @@ public class BlinkyActivity extends AppCompatActivity {
 				finish();
 			}
 		});
-		viewModel.getLEDState().observe(this, mLEDState -> { disText.setText(String.format("%d",mLEDState.byteValue())); });
-		viewModel.getButtonState().observe(this, mButtonState -> { buttonState.setText(String.format("%d",mButtonState.byteValue())); });
+		viewModel.getCMDState().observe(this, mCMDState -> {
+		    int val = mCMDState.byteValue();
+		    if (val < 0)
+		        val += 256;
+		    disText.setText(String.format("%d",val));
+		});
+		viewModel.getDATAState().observe(this, mDATAState -> { buttonState.setText(String.format("%d",mDATAState.byteValue())); });
 
 		RC.setOnClickListener( new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				Intent myIntent = new Intent(BlinkyActivity.this, MainActivity.class);
-                myIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
-                BlinkyActivity.this.startActivity(myIntent);
+				myIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
+				BlinkyActivity.this.startActivity(myIntent);
+			}
+		});
+		record.setOnClickListener( new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				viewModel.sendCMD(Byte.valueOf((byte)0x30));			//Does 2s record then ships data back through notification, saves to file sound.wav
+			}
+		});
+		play.setOnClickListener( new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				myplayer = new AudioTrackPlayer();
+				myplayer.prepare("sound.wav");
+				myplayer.play();							//this loops
+			}
+		});
+		stopplay.setOnClickListener( new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				myplayer.stop();
+				myplayer = null;
 			}
 		});
 	}

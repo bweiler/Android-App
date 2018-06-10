@@ -59,11 +59,9 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 	// Flag to determine if the device is ready
 	private final MutableLiveData<Void> mOnDeviceReady = new MutableLiveData<>();
 
-	// Flag that holds the on off state of the LED. On is true, Off is False
-	private final MutableLiveData<Byte> mLEDState = new MutableLiveData<>();
+	private final MutableLiveData<Byte> mCMDState = new MutableLiveData<>();
 
-	// Flag that holds the pressed released state of the button on the devkit. Pressed is true, Released is False
-	private final MutableLiveData<Byte> mButtonState = new MutableLiveData<>();
+	private final MutableLiveData<Byte> mDATAState = new MutableLiveData<>();
 
 	public LiveData<Void> isDeviceReady() {
 		return mOnDeviceReady;
@@ -77,12 +75,12 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 		return mIsConnected;
 	}
 
-	public LiveData<Byte> getButtonState() {
-		return mButtonState;
+	public LiveData<Byte> getDATAState() {
+		return mDATAState;
 	}
 
-	public LiveData<Byte> getLEDState() {
-		return mLEDState;
+	public LiveData<Byte> getCMDState() {
+		return mCMDState;
 	}
 
 	public BlinkyViewModel(@NonNull final Application application) {
@@ -109,9 +107,9 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 		mBlinkyManager.disconnect();
 	}
 
-	public void toggleLED(final Byte onOff) {
+	public void sendCMD(final Byte onOff) {
 		mBlinkyManager.send(onOff);
-		mLEDState.setValue(onOff);
+		mCMDState.setValue(onOff);
 	}
 
 	@Override
@@ -124,12 +122,12 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 
 	@Override
 	public void onDataReceived(final byte state) {
-		mButtonState.postValue(state);
+		mDATAState.postValue(state);
 	}
 
 	@Override
 	public void onDataSent(final byte state) {
-		mLEDState.postValue(state);
+		mCMDState.postValue(state);
 	}
 
 	@Override
