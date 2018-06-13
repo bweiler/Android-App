@@ -63,6 +63,12 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 
 	private final MutableLiveData<Byte> mDATAState = new MutableLiveData<>();
 
+	private final MutableLiveData<byte[]> mBYTE128State = new MutableLiveData<>();
+
+	private final MutableLiveData<byte[]> mBYTE4State = new MutableLiveData<>();
+
+	private final MutableLiveData<byte[]> mBYTE2State = new MutableLiveData<>();
+
 	public LiveData<Void> isDeviceReady() {
 		return mOnDeviceReady;
 	}
@@ -81,6 +87,15 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 
 	public LiveData<Byte> getCMDState() {
 		return mCMDState;
+	}
+	public LiveData<byte[]> getByte128State() {
+		return mBYTE128State;
+	}
+	public LiveData<byte[]> getByte4State() {
+		return mBYTE4State;
+	}
+	public LiveData<byte[]> getByte2State() {
+		return mBYTE2State;
 	}
 
 	public BlinkyViewModel(@NonNull final Application application) {
@@ -128,6 +143,21 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 	@Override
 	public void onDataSent(final byte state) {
 		mCMDState.postValue(state);
+	}
+
+	@Override
+	public void onByte128Sent(final byte[] state) {
+		mBYTE128State.postValue(state);
+	}
+
+	@Override
+	public void onByte4Sent(final byte[] state) {
+		mBYTE4State.postValue(state);
+	}
+
+	@Override
+	public void onByte2Sent(final byte[] state) {
+		mBYTE2State.postValue(state);
 	}
 
 	@Override

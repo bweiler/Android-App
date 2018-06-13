@@ -27,16 +27,22 @@ import no.nordicsemi.android.ble.BleManagerCallbacks;
 public interface BlinkyManagerCallbacks extends BleManagerCallbacks {
 
 	/**
-	 * Called when a button was pressed or released on device
+	 * Called when a data is received from device
 	 *
-	 * @param state true if the button was pressed, false if released
+	 * @param state byte
 	 */
 	void onDataReceived(final byte state);
 
 	/**
-	 * Called when the data has been sent to the connected device.
+	 * Called when the command has been sent to the connected device.
 	 *
-	 * @param state true when LED was enabled, false when disabled
+	 * @param state byte
 	 */
 	void onDataSent(final byte state);
+
+	void onByte128Sent(final byte[] state);
+
+	void onByte4Sent(final byte[] state);
+
+	void onByte2Sent(final byte[] state);
 }

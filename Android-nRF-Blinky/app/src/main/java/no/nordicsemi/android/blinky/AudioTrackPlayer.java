@@ -18,7 +18,7 @@ public class AudioTrackPlayer {
     private int size;
     private FileInputStream in = null;
     private byte[] byteData = null;
-    private int count = 512 * 1024; // 512 kb
+    private int count = 64 * 1024; // 2s audio 32 kb but allocate 64k
     private boolean isPlay = true;
     private boolean isLooping = false;
     private static Handler mHandler;
@@ -57,14 +57,13 @@ public class AudioTrackPlayer {
     };
 
     private AudioTrack createAudioPlayer() {
-        int intSize = android.media.AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_OUT_STEREO,
+        int intSize = android.media.AudioTrack.getMinBufferSize(16384, AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
-        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_OUT_STEREO,
+        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 16384, AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, intSize, AudioTrack.MODE_STREAM);
         if (audioTrack == null) {
             return null;
         }
-
         File file = null;
         file = new File(pathAudio);
 
