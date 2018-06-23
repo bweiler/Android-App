@@ -64,6 +64,8 @@ public class BlinkyActivity extends AppCompatActivity {
     AudioTrackPlayer myplayer;
 	FileOutputStream out = null;
 	File file = null;
+	int dataState = 0;
+	int runningtotal = 0;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -86,7 +88,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		viewModel.connect(device);
 
 		// Set up views
-		final TextView DATAState = findViewById(R.id.button_state);
+		final TextView msgString = findViewById(R.id.button_state);
 		final LinearLayout progressContainer = findViewById(R.id.progress_container);
 		final TextView connectionState = findViewById(R.id.connection_state);
 		final View content = findViewById(R.id.device_container);
@@ -101,7 +103,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button rover = findViewById(R.id.rover);
 		final Button stepmode = findViewById(R.id.step_mode);
 		final Button play = findViewById(R.id.play);
-		final Button stopplay = findViewById(R.id.stopplay);
+		final Button photov = findViewById(R.id.photovore);
 		final Button buzzer = findViewById(R.id.buzzer);
 		final Button record = findViewById(R.id.record);
 		final Button RC = findViewById(R.id.RC);
@@ -113,11 +115,11 @@ public class BlinkyActivity extends AppCompatActivity {
 		forward.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x12)));
 		back.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x13)));
 		stop.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x14)));
-		stepmode.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x16)));
 		buzzer.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x17)));
 		distance.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x22)));
 		ambient.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x21)));
 		rover.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x40)));
+		photov.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte)0x41)));
 
 		viewModel.isDeviceReady().observe(this, deviceReady -> {
 			progressContainer.setVisibility(View.GONE);
@@ -130,7 +132,48 @@ public class BlinkyActivity extends AppCompatActivity {
 			}
 		});
 		viewModel.getCMDState().observe(this, mCMDState -> {
-			disText.setText(String.format("%x",mCMDState.byteValue()));
+			switch(mCMDState.byteValue())
+			{
+				case 0x10:
+					disText.setText(String.format("Right Command"));
+					break;
+				case 0x11:
+					disText.setText(String.format("Left Command"));
+					break;
+				case 0x12:
+					disText.setText(String.format("Forward Command"));
+					break;
+				case 0x13:
+					disText.setText(String.format("Back Command"));
+					break;
+				case 0x14:
+					disText.setText(String.format("Stop Command"));
+					break;
+				case 0x16:
+					disText.setText(String.format("Step Mode Increase Command"));
+					break;
+				case 0x17:
+					disText.setText(String.format("Buzzer Command"));
+					break;
+				case 0x22:
+					disText.setText(String.format("Distance Command"));
+					break;
+				case 0x21:
+					disText.setText(String.format("Ambient Light Command"));
+					break;
+				case 0x40:
+					disText.setText(String.format("Rover Mode Command"));
+					break;
+				case 0x41:
+					disText.setText(String.format("Photovore Mode Command"));
+					break;
+				case 0x30:
+					disText.setText(String.format("Record Sound Command"));
+					break;
+				default:
+					disText.setText(String.format("Command %x",mCMDState.byteValue()));
+					break;
+			}
 		});
 		viewModel.getByte2State().observe(this, mBYTE2State -> {
 			byte[] val = mBYTE2State.clone();
@@ -145,23 +188,85 @@ public class BlinkyActivity extends AppCompatActivity {
 				valtemp = val[0];
 			}
 			valint += (valtemp << 8);
-			ambText.setText(String.format("%d",valint));
+			ambText.setText(String.format("Ambient Light is %d LUX",valint));
 			Log.d("BlinkyActivity", "Wrote notify bytes " + val.length);
 		});
 		viewModel.getDATAState().observe(this, mDATAState -> {
 			int val = mDATAState.byteValue();
 			if (val < 0)
 				val += 256;
-			DATAState.setText(String.format("%d",val));
+			if (dataState == 0) {
+				double inches = val / 20.0;
+				msgString.setText(String.format("Distance raw is %d, %6.3f inches", val, inches));
+			}
+			if (dataState == 1)
+			{
+				switch(val) {
+					case 0:
+						msgString.setText(String.format("Recording .."));
+						break;
+					case 255:
+						msgString.setText(String.format("Uploading Sound File ..."));
+						break;
+					case 127:
+						msgString.setText(String.format("Upload Sound File Complete."));
+						dataState = 0;
+						runningtotal = 0;
+						break;
+					default:
+						double inches = val / 20.0;
+						msgString.setText(String.format("Distance raw is %d, %6.3f inches", val, inches));
+						break;
+				}
+			}
+			if (dataState == 2)
+			{
+				switch(val)
+				{
+					case 0:
+						msgString.setText(String.format("Switch to Full Step"));
+						break;
+					case 1:
+						msgString.setText(String.format("Switch to Half Step"));
+						break;
+					case 2:
+						msgString.setText(String.format("Switch to Quarter Step"));
+						break;
+					case 3:
+						msgString.setText(String.format("Switch to 8th Stepping"));
+						break;
+					case 4:
+						msgString.setText(String.format("Switch to 16th Stepping"));
+						break;
+					case 5:
+						msgString.setText(String.format("Switch to 32th Stepping"));
+						break;
+					default:
+						msgString.setText(String.format("Oh no a bug in stepping mode, crap!"));
+						break;
+				}
+				dataState = 0;
+			}
 		});
 
 		viewModel.getByte128State().observe(this, mBYTE128State -> {
 			byte[] val = mBYTE128State.clone();
 			try {
 				out.write(val);
+				++runningtotal;
+				if ((runningtotal % 10) == 0)
+					ambText.setText(String.format("Packets Uploaded %d, %d bytes",runningtotal,runningtotal*val.length));
 				Log.d("BlinkyActivity", "Wrote notify bytes " + val.length);
 			} catch (IOException e) {
 				e.printStackTrace();
+			}
+		});
+
+		stepmode.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				dataState = 2;
+				viewModel.sendCMD(Byte.valueOf((byte)0x16));
 			}
 		});
 
@@ -191,6 +296,7 @@ public class BlinkyActivity extends AppCompatActivity {
                             new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                             MY_PERMISSIONS_REQUEST_STORAGE);
                 }
+                dataState = 1;
                 viewModel.sendCMD(Byte.valueOf((byte) 0x30));            //Does 2s record then ships data back through notification, saves to file sound.wav
 				file = new File("/sdcard/audio/sound.wav");
 				Log.d("BlinkyActivity", "Sent record opened file");
@@ -205,6 +311,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		play.setOnClickListener( new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				dataState = 0;
 				try {
 					if (out != null) {
 						out.close();
@@ -218,13 +325,6 @@ public class BlinkyActivity extends AppCompatActivity {
 				myplayer = new AudioTrackPlayer();
 				myplayer.prepare("/sdcard/Audio/sound.wav");
 				myplayer.play();							//this loops
-			}
-		});
-		stopplay.setOnClickListener( new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				myplayer.stop();
-				myplayer = null;
 			}
 		});
   	}
