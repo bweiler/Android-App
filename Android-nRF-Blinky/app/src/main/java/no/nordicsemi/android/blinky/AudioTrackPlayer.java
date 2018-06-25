@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class AudioTrackPlayer {
-    private String pathAudio;
+    private File pathAudio;
     private AudioTrack audioPlayer;
     private Thread mThread;
     private int bytesread = 0, ret = 0;
@@ -27,7 +27,7 @@ public class AudioTrackPlayer {
 
     }
 
-    public void prepare(String pathAudio) {
+    public void prepare(File pathAudio) {
         this.pathAudio = pathAudio;
         mHandler = new Handler();
     }
@@ -64,18 +64,16 @@ public class AudioTrackPlayer {
         if (audioTrack == null) {
             return null;
         }
-        File file = null;
-        file = new File(pathAudio);
 
         byteData = new byte[(int) count];
         try {
-            in = new FileInputStream(file);
+            in = new FileInputStream(pathAudio);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        size = (int) file.length();
+        size = (int) pathAudio.length();
         return audioTrack;
     }
 

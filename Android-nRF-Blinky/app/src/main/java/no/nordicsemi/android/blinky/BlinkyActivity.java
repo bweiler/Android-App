@@ -27,11 +27,28 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+		Skoobot Android app. Repurposed form Nordic Semi Blinky app they wrote for their reference designs. My app and their app are no longer compatible, so
+		you can't use their app with Skoobot, you have to use this one. Although nRFConnect will show you BLE characteristics and let you change them.
 
+		Author: Bill Weiler
+
+		Summary:
+
+		1. This app sends commands to Skoobot and receives notifications over BLE
+		2. When you hit the record button for audio record, these is 2s of recording on the robot. Then it uploads to the cellphone over BLE.
+		The total size of the 2s recording is 32k. After it uploads, pressing the play button will play it.
+		3. Fotovore mode will cause the robot to go formward when shining a light on it
+		4. Rover mode will ignore obstacles about 2.5 inches in front
+
+		Details:
+
+ */
 package no.nordicsemi.android.blinky;
 
 import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -298,7 +315,8 @@ public class BlinkyActivity extends AppCompatActivity {
                 }
                 dataState = 1;
                 viewModel.sendCMD(Byte.valueOf((byte) 0x30));            //Does 2s record then ships data back through notification, saves to file sound.wav
-				file = new File("/sdcard/audio/sound.wav");
+				Context context = getApplicationContext();
+				file = new File(context.getFilesDir(), "sound.wav");
 				Log.d("BlinkyActivity", "Sent record opened file");
 
 				try {
@@ -322,9 +340,13 @@ public class BlinkyActivity extends AppCompatActivity {
 				} catch (IOException e) {
 					e.getMessage();
 				}
-				myplayer = new AudioTrackPlayer();
-				myplayer.prepare("/sdcard/Audio/sound.wav");
-				myplayer.play();							//this loops
+				Context context = getApplicationContext();
+				file = new File(context.getFilesDir(), "sound.wav");
+				if (file.exists()) {
+					myplayer = new AudioTrackPlayer();
+					myplayer.prepare(file);
+					myplayer.play();                            //this loops
+				}
 			}
 		});
   	}
