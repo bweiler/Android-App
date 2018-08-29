@@ -82,7 +82,16 @@
 				android:orientation="vertical"
 				android:visibility="visible">
 
-				<LinearLayout
+				<Switch
+					android:id="@+id/switchmodes"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:checked="true"
+					android:text="Switch direction"
+					tools:checked="true" />
+
+                <LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:layout_weight="1"
@@ -93,30 +102,17 @@
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="Buzzer" />
-
-					<Button
-						android:id="@+id/record"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="record" />
-
-					<Button
-						android:id="@+id/play"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Play"
+						android:text="Buzzer"
 						android:visibility="visible" />
 
-					<Button
-						android:id="@+id/photovore"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Fotovore" />
-				</LinearLayout>
+                    <Button
+                        android:id="@+id/stop"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Stop"
+                        android:visibility="visible" />
+                </LinearLayout>
 
 				<LinearLayout
 					android:layout_width="match_parent"
@@ -131,13 +127,14 @@
 						android:text="Forward"
 						android:visibility="visible" />
 
-					<Button
-						android:id="@+id/left"
+                    <Button
+						android:id="@+id/backward"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="Left"
+						android:text="Backward"
 						android:visibility="visible" />
+
 				</LinearLayout>
 
 				<LinearLayout
@@ -147,11 +144,11 @@
 					android:orientation="horizontal">
 
 					<Button
-						android:id="@+id/stop"
+						android:id="@+id/left"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="Stop"
+						android:text="Left"
 						android:visibility="visible" />
 
 					<Button
@@ -168,14 +165,6 @@
 					android:layout_height="match_parent"
 					android:layout_weight="1"
 					android:orientation="horizontal">
-
-					<Button
-						android:id="@+id/backward"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Backward"
-						android:visibility="visible" />
 
 					<Button
 						android:id="@+id/distance"
@@ -207,33 +196,69 @@
 						android:visibility="visible" />
 
 					<Button
+						android:id="@+id/roverrev"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:text="Rover Rev"
+						android:visibility="visible" />
+
+					<Button
 						android:id="@+id/step_mode"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="Step Mode" />
+						android:text="Step Mode"
+						android:visibility="visible" />
 
 					<Button
 						android:id="@+id/RC"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="RC" />
+						android:text="RC"
+						android:visibility="visible" />
 
-				</LinearLayout>
+					<Button
+						android:id="@+id/photovore"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:text="Fotovore"
+						android:visibility="visible" />
 
-				<TextView
-					android:id="@+id/distanceText"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:text="App startup" />
+                </LinearLayout>
 
-				<TextView
-					android:id="@+id/ambientText"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:layout_weight="1"
-					android:text="App startup" />
+				<LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+					<Button
+						android:id="@+id/record_pi"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:text="Record Pi"
+						android:visibility="visible" />
+
+					<Button
+						android:id="@+id/record"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:text="record"
+						android:visibility="visible" />
+
+                    <Button
+                        android:id="@+id/play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Play"
+                        android:visibility="visible" />
+                </LinearLayout>
 
 			</LinearLayout>
 
@@ -246,21 +271,36 @@
 				android:background="@android:color/white"
 				app:cardElevation="1dp">
 
-				<android.support.constraint.ConstraintLayout
+				<LinearLayout
 					android:id="@+id/button_container"
 					android:layout_width="match_parent"
-					android:layout_height="match_parent">
+					android:layout_height="match_parent"
+					android:orientation="vertical">
+
+					<TextView
+						android:id="@+id/distanceText"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:text="App startup" />
+
+					<TextView
+						android:id="@+id/ambientText"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
+						android:layout_weight="1"
+						android:text="App startup" />
 
 					<TextView
 						android:id="@+id/button_state"
-						android:layout_width="0dp"
-						android:layout_height="wrap_content"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent"
 						android:padding="@dimen/activity_horizontal_margin"
+						android:text="App Startup"
 						android:textAlignment="center"
 						android:textAppearance="@android:style/TextAppearance.Medium"
 						android:textColor="#ff0000ff"
-						app:layout_constraintEnd_toEndOf="parent" />
-				</android.support.constraint.ConstraintLayout>
+						android:visibility="visible" />
+				</LinearLayout>
 			</android.support.v7.widget.CardView>
 		</LinearLayout>
 	</ScrollView>

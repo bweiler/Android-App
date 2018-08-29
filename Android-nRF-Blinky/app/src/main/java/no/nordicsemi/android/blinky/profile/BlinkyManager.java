@@ -125,14 +125,24 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 			if (characteristic == mCMDCharacteristic) {
 				final int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
 				final byte CMDByte = (byte) data;
-				log(LogContract.Log.Level.APPLICATION, "Command " + CMDByte + " ");
+				log(LogContract.Log.Level.APPLICATION, "Command byte read" + CMDByte + " ");
 				mCallbacks.onDataSent(CMDByte);
 			}
 			if (characteristic == mDATACharacteristic) {
 				final int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
 				final byte datain = (byte) data;
-				log(LogContract.Log.Level.APPLICATION, "Data recieved");
+				log(LogContract.Log.Level.APPLICATION, "1 byte data recieved");
 				mCallbacks.onDataReceived(datain);
+			}
+			if (characteristic == mBYTE4Characteristic) {
+				final byte[] datain = characteristic.getValue();
+				log(LogContract.Log.Level.APPLICATION, "4 byte data read now recieved : " + datain.length);
+				mCallbacks.onByte4Sent(datain);
+			}
+			if (characteristic == mBYTE128Characteristic) {
+				final byte[] datain = characteristic.getValue();
+				log(LogContract.Log.Level.APPLICATION, "20 byte data read now recieved : " + datain.length);
+				mCallbacks.onByte128Read(datain);
 			}
 		}
 
@@ -189,6 +199,24 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 		writeCharacteristic(mCMDCharacteristic);
 	}
 
+	public void readin() {
+		// Are we connected?
+		if (mBYTE128Characteristic == null) {
+			return;
+		}
+		log(LogContract.Log.Level.WARNING, "Reading 20 bytes value");
+		readCharacteristic(mBYTE128Characteristic);
+	}
+
+	public void readdata() {
+		// Are we connected?
+		if (mDATACharacteristic == null) {
+			return;
+		}
+		log(LogContract.Log.Level.WARNING, "Reading byte value");
+		readCharacteristic(mDATACharacteristic);
+	}
+
 	public void send4(final byte[] byte4) {
 		// Are we connected?
 		if (mBYTE4Characteristic == null)
@@ -196,6 +224,6 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 
 		mBYTE4Characteristic.setValue(byte4);
 		log(LogContract.Log.Level.WARNING, "4 Byte...");
-		writeCharacteristic(mCMDCharacteristic);
+		readCharacteristic(mBYTE4Characteristic);
 	}
 }

@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
 
     private BlinkyViewModel viewModel;
 
+    private int repeating_command = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

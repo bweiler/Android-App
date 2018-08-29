@@ -122,9 +122,17 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 		mBlinkyManager.disconnect();
 	}
 
-	public void sendCMD(final Byte onOff) {
-		mBlinkyManager.send(onOff);
-		mCMDState.setValue(onOff);
+	public void sendCMD(final Byte cmd) {
+		mBlinkyManager.send(cmd);
+		mCMDState.setValue(cmd);
+	}
+
+	public void read20bytedata() {
+		mBlinkyManager.readin();
+	}
+
+	public void readdata() {
+		mBlinkyManager.readdata();
 	}
 
 	@Override
@@ -147,6 +155,11 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 
 	@Override
 	public void onByte128Sent(final byte[] state) {
+		mBYTE128State.postValue(state);
+	}
+
+	@Override
+	public void onByte128Read(final byte[] state) {
 		mBYTE128State.postValue(state);
 	}
 

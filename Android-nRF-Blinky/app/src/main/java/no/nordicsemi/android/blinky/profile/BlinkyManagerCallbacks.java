@@ -42,6 +42,8 @@ public interface BlinkyManagerCallbacks extends BleManagerCallbacks {
 
 	void onByte128Sent(final byte[] state);
 
+	void onByte128Read(final byte[] state);
+
 	void onByte4Sent(final byte[] state);
 
 	void onByte2Sent(final byte[] state);
