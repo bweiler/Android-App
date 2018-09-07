@@ -54,6 +54,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -74,6 +75,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 import no.nordicsemi.android.log.LogContract;
 import no.nordicsemi.android.blinky.adapter.ExtendedBluetoothDevice;
@@ -83,7 +85,10 @@ import no.nordicsemi.android.log.Logger;
 public class BlinkyActivity extends AppCompatActivity {
 	public static final String EXTRA_DEVICE = "no.nordicsemi.android.blinky.EXTRA_DEVICE";
 	public static final int MY_PERMISSIONS_REQUEST_STORAGE = 100;
+	private static final int SPEECH_REQUEST_CODE = 0;
 
+	final private byte cmd_right_30 = 0x08;
+	final private byte cmd_left_30  = 0x09;
 	final private byte cmd_right = 0x10;
 	final private byte cmd_left  = 0x11;
 	final private byte cmd_forward = 0x12;
@@ -99,6 +104,7 @@ public class BlinkyActivity extends AppCompatActivity {
 	final private byte cmd_rover = 0x40;
 	final private byte cmd_rover_rev = 0x42;
 	final private byte cmd_photov = 0x41;
+	final private byte cmd_con_dis	= 0x23;
 
 	final private int total_20byte_packets = 1200;
 
@@ -108,13 +114,16 @@ public class BlinkyActivity extends AppCompatActivity {
     private int dataState = 0;
     private int runningtotal = 0;
     private int repeatingpress = 0;
+    private int mSpeakInterval = 100;
+    private boolean mSpeakReady = true;
 	private byte motors_forward = cmd_forward, motors_backward = cmd_back;
 	private byte motors_left = cmd_left, motors_right = cmd_right;
 	private byte rover_mode = cmd_rover, rover_mode_rev = cmd_rover_rev;
 	private int records_pi_ready = 0;
 	private BlinkyViewModel viewModel = null;
 	private int mInterval = 20; // 20 milliseconds for BLE connection interval
-	private Handler mHandler;
+	private Handler mHandler = null;
+	private Handler mSpeakHandler = null;
 
 	@SuppressLint("ClickableViewAccessibility")
     @Override
@@ -158,6 +167,8 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button record = findViewById(R.id.record);
 		final Button recordpi = findViewById(R.id.record_pi);
 		final Button RC = findViewById(R.id.RC);
+		final Button con_dis = findViewById(R.id.con_dis);
+		final Button speak = findViewById(R.id.speech);
 		final Switch dirsw = findViewById(R.id.switchmodes);
 		final TextView disText = findViewById(R.id.distanceText);
 		final TextView ambText = findViewById(R.id.ambientText);
@@ -173,6 +184,7 @@ public class BlinkyActivity extends AppCompatActivity {
 		rover.setOnClickListener(view -> viewModel.sendCMD(rover_mode));
 		roverrev.setOnClickListener(view -> viewModel.sendCMD(rover_mode_rev));
 		photov.setOnClickListener(view -> viewModel.sendCMD(cmd_photov));
+		con_dis.setOnClickListener(view -> viewModel.sendCMD(cmd_con_dis));
 
 		dirsw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -454,6 +466,18 @@ public class BlinkyActivity extends AppCompatActivity {
 				}
 			}
 		});
+		/*
+			This will repeat asking for words every mSpeakInterval (currently 100ms).
+			provided that it has previously returned a word and is ready.
+			Saying "Quit" or hitting a button ends speech recognition.
+		*/
+		speak.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mSpeakHandler = new Handler();
+				startRepeatingSpeech();
+			}
+		});
 		play.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -546,6 +570,49 @@ public class BlinkyActivity extends AppCompatActivity {
             }
         });
     }
+	// This callback is invoked when the Speech Recognizer returns.
+	// This is where you process the intent and extract the speech text from the intent.
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode,
+									Intent data) {
+		if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+			List<String> results = data.getStringArrayListExtra(
+					RecognizerIntent.EXTRA_RESULTS);
+			String spokenText = results.get(0);
+			if (spokenText.equalsIgnoreCase(new String("Forward")))
+			{
+				viewModel.sendCMD(motors_forward);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Backward")))
+			{
+				viewModel.sendCMD(motors_backward);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Left")))
+			{
+				viewModel.sendCMD(cmd_left_30);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Right")))
+			{
+				viewModel.sendCMD(cmd_right_30);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Stop")))
+			{
+				viewModel.sendCMD(cmd_stop);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Buzzer")))
+			{
+				viewModel.sendCMD(cmd_buzzer);
+			}
+			if (spokenText.equalsIgnoreCase(new String("Quit")))
+			{
+				stopRepeatingSpeech();
+				viewModel.sendCMD(cmd_stop);
+			}
+			Log.d("BlinkyActivitySpeech", spokenText);
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+		mSpeakReady = true;
+	}
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -565,7 +632,7 @@ public class BlinkyActivity extends AppCompatActivity {
 				if (records_pi_ready == 2)
 					stopRepeatingTask();
 			} finally {
-				if (mReadRepeat != null)
+				if (mHandler != null)
 					mHandler.postDelayed(mReadRepeat, mInterval);
 			}
 		}
@@ -576,9 +643,39 @@ public class BlinkyActivity extends AppCompatActivity {
 	}
 
 	public void stopRepeatingTask() {
-		if (mReadRepeat != null)
+		if (mReadRepeat != null && mHandler != null)
 			mHandler.removeCallbacks(mReadRepeat);
-		mReadRepeat = null;
+		mHandler = null;
+	}
+
+	Runnable mSpeakRepeat = new Runnable() {
+		@Override
+		public void run() {
+			try {
+				if (mSpeakReady == true) {
+					mSpeakReady = false;
+					// Create an intent that can start the Speech Recognizer activity
+					Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+					intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+							RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+					// Start the activity, the intent will be populated with the speech text
+					startActivityForResult(intent, SPEECH_REQUEST_CODE);
+				}
+			} finally {
+				if (mSpeakHandler != null)
+					mSpeakHandler.postDelayed(mSpeakRepeat, mSpeakInterval);
+			}
+		}
+	};
+
+	public void startRepeatingSpeech() {
+		mSpeakRepeat.run();
+	}
+
+	public void stopRepeatingSpeech() {
+		if (mSpeakRepeat != null && mSpeakHandler != null)
+			mSpeakHandler.removeCallbacks(mSpeakRepeat);
+		mSpeakHandler = null;
 	}
 
     public void readpi()
