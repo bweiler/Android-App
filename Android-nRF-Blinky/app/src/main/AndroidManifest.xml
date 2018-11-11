@@ -79,6 +79,10 @@
 			android:name=".MainActivity"
 			android:launchMode="singleTop">
 		</activity>
+		<activity
+			android:name=".SubActivity"
+			android:launchMode="singleTop">
+		</activity>
 
 
 	</application>

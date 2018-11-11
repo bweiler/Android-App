@@ -219,11 +219,12 @@ public class BlinkyManager extends BleManager<BlinkyManagerCallbacks> {
 
 	public void send4(final byte[] byte4) {
 		// Are we connected?
-		if (mBYTE4Characteristic == null)
+		if (mBYTE4Characteristic == null) {
+			log(LogContract.Log.Level.WARNING, "4 byte characteristic is null");
 			return;
-
+		}
 		mBYTE4Characteristic.setValue(byte4);
-		log(LogContract.Log.Level.WARNING, "4 Byte...");
-		readCharacteristic(mBYTE4Characteristic);
+		log(LogContract.Log.Level.WARNING, "4 Byte sent");
+		writeCharacteristic(mBYTE4Characteristic);
 	}
 }

@@ -84,11 +84,7 @@ import no.nordicsemi.android.log.Logger;
 
 public class BlinkyActivity extends AppCompatActivity {
 	public static final String EXTRA_DEVICE = "no.nordicsemi.android.blinky.EXTRA_DEVICE";
-	public static final int MY_PERMISSIONS_REQUEST_STORAGE = 100;
-	private static final int SPEECH_REQUEST_CODE = 0;
 
-	final private byte cmd_right_30 = 0x08;
-	final private byte cmd_left_30  = 0x09;
 	final private byte cmd_right = 0x10;
 	final private byte cmd_left  = 0x11;
 	final private byte cmd_forward = 0x12;
@@ -98,32 +94,17 @@ public class BlinkyActivity extends AppCompatActivity {
 	final private byte cmd_buzzer = 0x17;
 	final private byte cmd_distance = 0x22;
 	final private byte cmd_ambient = 0x21;
-	final private byte cmd_record = 0x30;
-	final private byte cmd_record_pi = 0x33;
-	final private byte cmd_stepmode = 0x16;
 	final private byte cmd_rover = 0x40;
 	final private byte cmd_rover_rev = 0x42;
 	final private byte cmd_photov = 0x41;
-	final private byte cmd_con_dis	= 0x23;
+	final private byte motors_speed = 0x50;
+	private int repeatingpress = 0;
 
-	final private int total_20byte_packets = 1200;
-
-    private AudioTrackPlayer myplayer;
-    private FileOutputStream out = null;
-    private File file = null;
-    private int dataState = 0;
-    private int runningtotal = 0;
-    private int repeatingpress = 0;
-    private int mSpeakInterval = 100;
-    private boolean mSpeakReady = true;
+	private int dataState = 0;
 	private byte motors_forward = cmd_forward, motors_backward = cmd_back;
 	private byte motors_left = cmd_left, motors_right = cmd_right;
 	private byte rover_mode = cmd_rover, rover_mode_rev = cmd_rover_rev;
-	private int records_pi_ready = 0;
 	private BlinkyViewModel viewModel = null;
-	private int mInterval = 20; // 20 milliseconds for BLE connection interval
-	private Handler mHandler = null;
-	private Handler mSpeakHandler = null;
 
 	@SuppressLint("ClickableViewAccessibility")
     @Override
@@ -148,7 +129,6 @@ public class BlinkyActivity extends AppCompatActivity {
 		// Set up views
 		final TextView msgString = findViewById(R.id.button_state);
 		final LinearLayout progressContainer = findViewById(R.id.progress_container);
-		final TextView connectionState = findViewById(R.id.connection_state);
 		final View content = findViewById(R.id.device_container);
 
 		final Button left = findViewById(R.id.left);
@@ -160,21 +140,33 @@ public class BlinkyActivity extends AppCompatActivity {
 		final Button ambient = findViewById(R.id.ambient);
 		final Button rover = findViewById(R.id.rover);
 		final Button roverrev = findViewById(R.id.roverrev);
-		final Button stepmode = findViewById(R.id.step_mode);
-		final Button play = findViewById(R.id.play);
+		final Button submenu = findViewById(R.id.submenu);
 		final Button photov = findViewById(R.id.photovore);
 		final Button buzzer = findViewById(R.id.buzzer);
-		final Button record = findViewById(R.id.record);
-		final Button recordpi = findViewById(R.id.record_pi);
 		final Button RC = findViewById(R.id.RC);
-		final Button con_dis = findViewById(R.id.con_dis);
-		final Button speak = findViewById(R.id.speech);
 		final Switch dirsw = findViewById(R.id.switchmodes);
 		final TextView disText = findViewById(R.id.distanceText);
 		final TextView ambText = findViewById(R.id.ambientText);
 
-		//right.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte) 0x10)));
-		//left.setOnClickListener(view -> viewModel.sendCMD(Byte.valueOf((byte) 0x11)));
+		Context context = getApplicationContext();
+		File file = new File(context.getFilesDir(), "speed.dat");
+		FileInputStream in = null;
+		byte[] sendspeed = new byte[4];
+		int bytesread = 0;
+		try {
+			in = new FileInputStream(file);
+			if (in != null) {
+				bytesread = in.read(sendspeed);
+				in.close();
+			}
+			if (sendspeed[0] == motors_speed && sendspeed[1] <= 0x0f)
+				viewModel.send4Byte(sendspeed);
+		}
+		catch (IOException e) {
+			Log.d("BlinkyActivity", "Failed to read speed file ");
+		}
+		Log.d("BlinkyActivity", String.format("Bytes read %d",bytesread));
+
 		forward.setOnClickListener(view -> viewModel.sendCMD(motors_forward));
 		back.setOnClickListener(view -> viewModel.sendCMD(motors_backward));
 		stop.setOnClickListener(view -> viewModel.sendCMD(cmd_stop));
@@ -184,7 +176,6 @@ public class BlinkyActivity extends AppCompatActivity {
 		rover.setOnClickListener(view -> viewModel.sendCMD(rover_mode));
 		roverrev.setOnClickListener(view -> viewModel.sendCMD(rover_mode_rev));
 		photov.setOnClickListener(view -> viewModel.sendCMD(cmd_photov));
-		con_dis.setOnClickListener(view -> viewModel.sendCMD(cmd_con_dis));
 
 		dirsw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -209,7 +200,7 @@ public class BlinkyActivity extends AppCompatActivity {
 			progressContainer.setVisibility(View.GONE);
 			content.setVisibility(View.VISIBLE);
 		});
-		viewModel.getConnectionState().observe(this, connectionState::setText);
+		//viewModel.getConnectionState().observe(this, connectionState::setText);
 		viewModel.isConnected().observe(this, connected -> {
 			if (!connected) {
 				finish();
@@ -294,84 +285,19 @@ public class BlinkyActivity extends AppCompatActivity {
 				msgString.setText(String.format("Distance raw is %d, %6.3f inches", val, inches));
 			}
 			if (dataState == 1) {
-				switch (val) {
-					case 0:
-						msgString.setText(String.format("Recording .."));
-						Log.d("BlinkyActivity", "Received 0 recording ");
-						break;
-					case 255:
-						msgString.setText(String.format("Uploading Sound File ..."));
-						records_pi_ready = 1;
-						Log.d("BlinkyActivity", "Received 255 uploading ");
-						break;
-					case 127:
-						msgString.setText(String.format("Upload Sound File Complete."));
-						dataState = 0;
-						runningtotal = 0;
-						Log.d("BlinkyActivity", "Received 127 upload complete ");
-						break;
-					default:
-						double inches = val / 20.0;
-						msgString.setText(String.format("Distance raw is %d, %6.3f inches", val, inches));
-						break;
-				}
+				double inches = val / 20.0;
+				msgString.setText(String.format("Distance raw is %d, %6.3f inches", val, inches));
 			}
-			if (dataState == 2) {
-				switch (val) {
-					case 0:
-						msgString.setText(String.format("Switch to Full Step"));
-						break;
-					case 1:
-						msgString.setText(String.format("Switch to Half Step"));
-						break;
-					case 2:
-						msgString.setText(String.format("Switch to Quarter Step"));
-						break;
-					case 3:
-						msgString.setText(String.format("Switch to 8th Stepping"));
-						break;
-					case 4:
-						msgString.setText(String.format("Switch to 16th Stepping"));
-						break;
-					case 5:
-						msgString.setText(String.format("Switch to 32th Stepping"));
-						break;
-					default:
-						msgString.setText(String.format("Oh no a bug in stepping mode, crap!"));
-						break;
-				}
-				dataState = 0;
-			}
+			dataState = 0;
 			Log.d("BlinkyActivity", "Received data " + String.format("val=%d,dataState=%d",val,dataState));
 		});
 
-		//dataState must be 1 for notifications and reads- to be written to the sound file- on this characteristic
-		//The firmware is 16k 16-bit values, or 32k bytes. This is 1638.4 packets, or 1638 packets
-		viewModel.getByte128State().observe(this, mBYTE128State -> {
-			byte[] val = mBYTE128State.clone();
-			try {
-				if (out != null && dataState == 1) {
-					out.write(val);
-					++runningtotal;
-					if (runningtotal == 1638) {
-						ambText.setText(String.format("DONE: Packets Uploaded %d, %d bytes", runningtotal, runningtotal * val.length));
-						records_pi_ready = 2;
-					} else {
-						if ((runningtotal % 10) == 0)
-							ambText.setText(String.format("Packets Uploaded %d, %d bytes", runningtotal, runningtotal * val.length));
-					}
-					Log.d("BlinkyActivity", String.format("20: %x %x %x %x %x %x len = %d total=%d",val[0],val[1],val[2],val[3],val[4],val[5],val.length,runningtotal));
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		});
-
-		stepmode.setOnClickListener(new View.OnClickListener() {
+	    submenu.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				dataState = 2;
-				viewModel.sendCMD(cmd_stepmode);
+				Intent myIntent = new Intent(BlinkyActivity.this, SubActivity.class);
+				myIntent.putExtra(BlinkyActivity.EXTRA_DEVICE, device);
+				BlinkyActivity.this.startActivity(myIntent);
 			}
 		});
 
@@ -383,125 +309,7 @@ public class BlinkyActivity extends AppCompatActivity {
 				BlinkyActivity.this.startActivity(myIntent);
 			}
 		});
-		/*  This is the original record that uses notifications
-
-			The single byte characteristic is used as a flag, this is also a notification
-			0 - recording
-			255 - recording done, ready for upload
-			127 - upload complete, no more data
-
-			The sound file itself is read 20 byte at a time. It is a total of 1638 20byte notifies
-		*/
-		record.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-            /*
-            I went into App for Skoobot permissions and checked storage
-            Here, thisActivity is the current activity
-            */
-				if (ContextCompat.checkSelfPermission(BlinkyActivity.this,
-						Manifest.permission.WRITE_EXTERNAL_STORAGE)
-						!= PackageManager.PERMISSION_GRANTED) {
-					// No explanation needed; request the permission
-					ActivityCompat.requestPermissions(BlinkyActivity.this,
-							new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-							MY_PERMISSIONS_REQUEST_STORAGE);
-					ActivityCompat.requestPermissions(BlinkyActivity.this,
-							new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-							MY_PERMISSIONS_REQUEST_STORAGE);
-				}
-				dataState = 1;
-				viewModel.sendCMD(cmd_record);            //Does 2s record then ships data back through notification, saves to file sound.wav
-				Context context = getApplicationContext();
-				file = new File(context.getFilesDir(), "sound.wav");
-				Log.d("BlinkyActivity", "Sent record opened file");
-
-				try {
-					out = new FileOutputStream(file);
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-		/*  The point of record pi is not to use notifications, but to use reads
-
-			The single byte characteristic is used as a flag
-			0 - recording
-			255 - recording done, ready for upload
-			127 - upload complete, no more data
-
-			The sound file itself is read 20 byte at a time. It is a total of 1638 20byte reads
-		*/
-		recordpi.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-            /*
-            I went into App for Skoobot permissions and checked storage
-            Here, thisActivity is the current activity
-            */
-				if (ContextCompat.checkSelfPermission(BlinkyActivity.this,
-						Manifest.permission.WRITE_EXTERNAL_STORAGE)
-						!= PackageManager.PERMISSION_GRANTED) {
-					// No explanation needed; request the permission
-					ActivityCompat.requestPermissions(BlinkyActivity.this,
-							new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-							MY_PERMISSIONS_REQUEST_STORAGE);
-					ActivityCompat.requestPermissions(BlinkyActivity.this,
-							new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-							MY_PERMISSIONS_REQUEST_STORAGE);
-				}
-				dataState = 1;
-				records_pi_ready = 0;
-				viewModel.sendCMD(cmd_record_pi);
-				Context context = getApplicationContext();
-				file = new File(context.getFilesDir(), "sound.wav");
-				Log.d("BlinkyActivity", "Sent record pi opened file");
-				int i;
-				try {
-					out = new FileOutputStream(file);
-					mHandler = new Handler();
-					startRepeatingReads();
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-		/*
-			This will repeat asking for words every mSpeakInterval (currently 100ms).
-			provided that it has previously returned a word and is ready.
-			Saying "Quit" or hitting a button ends speech recognition.
-		*/
-		speak.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mSpeakHandler = new Handler();
-				startRepeatingSpeech();
-			}
-		});
-		play.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				dataState = 0;
-				try {
-					if (out != null) {
-						out.close();
-						out = null;
-						file = null;
-						Log.d("BlinkyActivity", "Closed file");
-					}
-				} catch (IOException e) {
-					e.getMessage();
-				}
-				Context context = getApplicationContext();
-				file = new File(context.getFilesDir(), "sound.wav");
-				if (file.exists()) {
-					myplayer = new AudioTrackPlayer();
-					myplayer.prepare(file);
-					myplayer.play();                            //this loops
-				}
-			}
-		});
-        left.setOnTouchListener(new View.OnTouchListener() {
+	    left.setOnTouchListener(new View.OnTouchListener() {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -570,153 +378,7 @@ public class BlinkyActivity extends AppCompatActivity {
             }
         });
     }
-	// This callback is invoked when the Speech Recognizer returns.
-	// This is where you process the intent and extract the speech text from the intent.
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode,
-									Intent data) {
-		if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
-			List<String> results = data.getStringArrayListExtra(
-					RecognizerIntent.EXTRA_RESULTS);
-			String spokenText = results.get(0);
-			if (spokenText.equalsIgnoreCase(new String("Forward")))
-			{
-				viewModel.sendCMD(motors_forward);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Backward")))
-			{
-				viewModel.sendCMD(motors_backward);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Left")))
-			{
-				viewModel.sendCMD(cmd_left_30);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Right")))
-			{
-				viewModel.sendCMD(cmd_right_30);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Stop")))
-			{
-				viewModel.sendCMD(cmd_stop);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Buzzer")))
-			{
-				viewModel.sendCMD(cmd_buzzer);
-			}
-			if (spokenText.equalsIgnoreCase(new String("Quit")))
-			{
-				stopRepeatingSpeech();
-				viewModel.sendCMD(cmd_stop);
-			}
-			Log.d("BlinkyActivitySpeech", spokenText);
-		}
-		super.onActivityResult(requestCode, resultCode, data);
-		mSpeakReady = true;
-	}
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		stopRepeatingTask();
-	}
 
-	Runnable mReadRepeat = new Runnable() {
-		@Override
-		public void run() {
-			try {
-				if (records_pi_ready == 0)
-					viewModel.readdata();
-				if (records_pi_ready == 1) {        //ready to upload
-					viewModel.read20bytedata();
-					viewModel.readdata();
-				}
-				if (records_pi_ready == 2)
-					stopRepeatingTask();
-			} finally {
-				if (mHandler != null)
-					mHandler.postDelayed(mReadRepeat, mInterval);
-			}
-		}
-	};
-
-	public void startRepeatingReads() {
-		mReadRepeat.run();
-	}
-
-	public void stopRepeatingTask() {
-		if (mReadRepeat != null && mHandler != null)
-			mHandler.removeCallbacks(mReadRepeat);
-		mHandler = null;
-	}
-
-	Runnable mSpeakRepeat = new Runnable() {
-		@Override
-		public void run() {
-			try {
-				if (mSpeakReady == true) {
-					mSpeakReady = false;
-					// Create an intent that can start the Speech Recognizer activity
-					Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-					intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-							RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-					// Start the activity, the intent will be populated with the speech text
-					startActivityForResult(intent, SPEECH_REQUEST_CODE);
-				}
-			} finally {
-				if (mSpeakHandler != null)
-					mSpeakHandler.postDelayed(mSpeakRepeat, mSpeakInterval);
-			}
-		}
-	};
-
-	public void startRepeatingSpeech() {
-		mSpeakRepeat.run();
-	}
-
-	public void stopRepeatingSpeech() {
-		if (mSpeakRepeat != null && mSpeakHandler != null)
-			mSpeakHandler.removeCallbacks(mSpeakRepeat);
-		mSpeakHandler = null;
-	}
-
-    public void readpi()
-	{
-		while(true)
-		{
-			viewModel.readdata();
-			if (records_pi_ready == 1)			//ready to upload
-				break;
-		}
-		while(true)
-		{
-			viewModel.read20bytedata();			//submit reads of sound data file
-			if (records_pi_ready == 2) {        //flag set when finished uploading
-				viewModel.readdata();			//read to trigger finish in data
-				break;
-			}
-		}
-		return;
-	}
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_STORAGE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request.
-        }
-    }
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {

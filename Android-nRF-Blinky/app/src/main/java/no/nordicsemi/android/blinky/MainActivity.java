@@ -31,40 +31,46 @@ public class MainActivity extends AppCompatActivity {
 
     private static final boolean TREAT_OUT_OF_BOUNDS_AS_CENTER = true;
 
-    private static final int CROSS_DEAD_ZONE_IN_DP  = 25; // 160 DIP is 1 in. 40 is around 1/4 in
+    private static final int CROSS_DEAD_ZONE_IN_DP = 25; // 160 DIP is 1 in. 40 is around 1/4 in
     private static final int ANALOG_DEAD_ZONE_IN_DP = 10;
 
+    private static final int NOOP = 0;
+    private static final int FORWARD = 1;
+    private static final int BACKWARD = 2;
+    private static final int RIGHT = 3;
+    private static final int LEFT = 4;
+    private static final int STOP = 5;
     // the top
     private static final Double PI_SLICE_UP0 = 0d;
     private static final Double PI_SLICE_UP1 = -Math.PI / 8;
-//    private static final Double PI_SLICE_UP2 = -Math.PI / 4;
+    //    private static final Double PI_SLICE_UP2 = -Math.PI / 4;
     private static final Double PI_SLICE_UP3 = -(3 * Math.PI) / 8;
-//    private static final Double PI_SLICE_UP4 = -Math.PI / 2;
+    //    private static final Double PI_SLICE_UP4 = -Math.PI / 2;
     private static final Double PI_SLICE_UP5 = -(5 * Math.PI) / 8;
-//    private static final Double PI_SLICE_UP6 = -(6 * Math.PI) / 8;
+    //    private static final Double PI_SLICE_UP6 = -(6 * Math.PI) / 8;
     private static final Double PI_SLICE_UP7 = -(7 * Math.PI) / 8;
     private static final Double PI_SLICE_UP8 = -Math.PI;
 
     // the bottom
     private static final Double PI_SLICE_DN0 = 0d;
     private static final Double PI_SLICE_DN1 = Math.PI / 8;
-//    private static final Double PI_SLICE_DN2 = Math.PI / 4;
+    //    private static final Double PI_SLICE_DN2 = Math.PI / 4;
     private static final Double PI_SLICE_DN3 = (3 * Math.PI) / 8;
-//    private static final Double PI_SLICE_DN4 = Math.PI / 2;
+    //    private static final Double PI_SLICE_DN4 = Math.PI / 2;
     private static final Double PI_SLICE_DN5 = (5 * Math.PI) / 8;
-//    private static final Double PI_SLICE_DN6 = (6 * Math.PI) / 8;
+    //    private static final Double PI_SLICE_DN6 = (6 * Math.PI) / 8;
     private static final Double PI_SLICE_DN7 = (7 * Math.PI) / 8;
     private static final Double PI_SLICE_DN8 = Math.PI;
 
     private static final int UNPRESSED_COLOR = 0xFF808080;
-    private static final int PRESSED_COLOR   = 0xFF000000;
+    private static final int PRESSED_COLOR = 0xFF000000;
 
-    private TextView  textViewUp;
-    private TextView  textViewDn;
-    private TextView  textViewLt;
-    private TextView  textViewRt;
-    private DotView   dotView;
-    private Button    quitActivity;
+    private TextView textViewUp;
+    private TextView textViewDn;
+    private TextView textViewLt;
+    private TextView textViewRt;
+    private DotView dotView;
+    private Button quitActivity;
 
     private ViewGroup controlsContainer;
 
@@ -79,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BlinkyViewModel viewModel;
 
-    private int repeating_command = 0;
+    private int robot_command = STOP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
         quitActivity = findViewById(R.id.quit);
 
-        dotView    = findViewById(R.id.dotView);
+        dotView = findViewById(R.id.dotView);
 
         controlsContainer = findViewById(R.id.crossContainer);
         controlsContainer.setOnTouchListener(onCrossTouched);
@@ -106,35 +112,39 @@ public class MainActivity extends AppCompatActivity {
         viewModel.connect(device);
 
         Resources r = getResources();
-        crossDeadzoneInPx  = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, CROSS_DEAD_ZONE_IN_DP, r.getDisplayMetrics());
+        crossDeadzoneInPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, CROSS_DEAD_ZONE_IN_DP, r.getDisplayMetrics());
         analogDeadzoneInPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, ANALOG_DEAD_ZONE_IN_DP, r.getDisplayMetrics());
 
-        dotView.updateCoordinates(0,0);
+        dotView.updateCoordinates(0, 0);
         dotView.setOnTouchListener(onAnalogTouched);
 
-        quitActivity.setOnClickListener( new View.OnClickListener() {
+        quitActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
-    	updateTextViews(5);
+        updateTextViews(5);
     }
 
     private void robotForward() {
         viewModel.sendCMD(Byte.valueOf((byte) 0x12)); //forward
     }
+
     private void robotBackward() {
         viewModel.sendCMD(Byte.valueOf((byte) 0x13)); //back
     }
+
     private void robotStop() {
         viewModel.sendCMD(Byte.valueOf((byte) 0x14)); //stop
     }
+
     private void robotRight() {
         viewModel.sendCMD(Byte.valueOf((byte) 0x10));  //right
     }
+
     private void robotLeft() {
-        viewModel.sendCMD(Byte.valueOf((byte)0x11));  //left
+        viewModel.sendCMD(Byte.valueOf((byte) 0x11));  //left
     }
 
 
@@ -155,29 +165,10 @@ public class MainActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_MOVE:
                     direction = calculateDirection(event.getX(), event.getY(), v.getWidth(), v.getHeight());
-                    switch(direction)
-                    {
-                        case 8: // 8 is up
-                            robotForward();
-                            break;
-                        case 2: // 2 is down
-                            robotBackward();
-                            break;
-                        case 4: // 4 is left
-                            robotLeft();
-                            break;
-                        case 6: // 6 is right.
-                            robotRight();
-                            break;
-                        case 5: // 5 is center
-                            robotStop();
-                            break;
-                    }
                     break;
 
                 case MotionEvent.ACTION_UP:
                     direction = 5;
-                    robotStop();
                     break;
 
                 default:
@@ -186,6 +177,43 @@ public class MainActivity extends AppCompatActivity {
 
             updateTextViews(direction);
 
+            switch (direction) {
+                case 8: // 8 is up
+                    if (robot_command != FORWARD)
+                    {
+                        robot_command = FORWARD;
+                        robotForward();
+                    }
+                    break;
+                case 2: // 2 is down
+                    if (robot_command != BACKWARD)
+                    {
+                        robot_command = BACKWARD;
+                        robotBackward();
+                    }
+                    break;
+                case 4: // 4 is left
+                    if (robot_command != LEFT)
+                    {
+                        robot_command = LEFT;
+                        robotLeft();
+                    }
+                    break;
+                case 6: // 6 is right.
+                    if (robot_command != RIGHT)
+                    {
+                        robot_command = RIGHT;
+                        robotRight();
+                    }
+                    break;
+                case 5: // 5 is center
+                    if (robot_command != STOP)
+                    {
+                        robot_command = STOP;
+                        robotStop();
+                    }
+                    break;
+            }
             // avoids eating the event chain
             return true;
         }
@@ -194,33 +222,32 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Calculates the direction
      *
-     * @param x       The x position
-     * @param y       The y position
-     * @param width   The width
-     * @param height  The height
-     *
+     * @param x      The x position
+     * @param y      The y position
+     * @param width  The width
+     * @param height The height
      * @return See the numeric keypad for direction. 5 = center. 1 = down-left; 9 is top-right; 7 is top-left; 3 is down-right. 8 is up, 2 is down, 4 is left, and 6 is right.
      */
     private int calculateDirection(double x, double y, double width, double height) {
 
         if (TREAT_OUT_OF_BOUNDS_AS_CENTER) {
-            if ( (x < 0) || (y < 0) || (x > width) || ( y > height ) ) {
+            if ((x < 0) || (y < 0) || (x > width) || (y > height)) {
                 return 5;
             }
         }
 
         // remember your trig? There might be a better way to fake the trig though
-        if ( stickCenterX == -1 ) {
+        if (stickCenterX == -1) {
             stickCenterX = width / 2;
         }
-        if ( stickCenterY == -1 ) {
+        if (stickCenterY == -1) {
             stickCenterY = height / 2;
         }
 
         double xPos = x - stickCenterX;
         double yPos = y - stickCenterY;
 
-        if ( ( Math.abs(xPos) < crossDeadzoneInPx) && ( Math.abs(yPos) < crossDeadzoneInPx) ) {
+        if ((Math.abs(xPos) < crossDeadzoneInPx) && (Math.abs(yPos) < crossDeadzoneInPx)) {
             return 5;
         }
 
@@ -233,35 +260,35 @@ public class MainActivity extends AppCompatActivity {
         // the left part is going to be the trickiest
 
         // Draw a square divided into 8 pieces. That's what this is doing
-        if ( ( angle <= PI_SLICE_UP0) && ( angle >= PI_SLICE_UP1 ) ) {
+        if ((angle <= PI_SLICE_UP0) && (angle >= PI_SLICE_UP1)) {
             return 6;
         }
-        if ( ( angle <= PI_SLICE_UP1) && ( angle >= PI_SLICE_UP3 ) ) {
+        if ((angle <= PI_SLICE_UP1) && (angle >= PI_SLICE_UP3)) {
             return 9;
         }
-        if ( ( angle <= PI_SLICE_UP3) && ( angle >= PI_SLICE_UP5 ) ) {
+        if ((angle <= PI_SLICE_UP3) && (angle >= PI_SLICE_UP5)) {
             return 8;
         }
-        if ( ( angle <= PI_SLICE_UP5) && ( angle >= PI_SLICE_UP7 ) ) {
+        if ((angle <= PI_SLICE_UP5) && (angle >= PI_SLICE_UP7)) {
             return 7;
         }
-        if ( ( angle <= PI_SLICE_UP7) && ( angle >= PI_SLICE_UP8 ) ) {
+        if ((angle <= PI_SLICE_UP7) && (angle >= PI_SLICE_UP8)) {
             return 4;
         }
 
-        if ( ( angle >= PI_SLICE_DN0) && ( angle <= PI_SLICE_DN1 ) ) {
+        if ((angle >= PI_SLICE_DN0) && (angle <= PI_SLICE_DN1)) {
             return 6;
         }
-        if ( ( angle >= PI_SLICE_DN1) && ( angle <= PI_SLICE_DN3 ) ) {
+        if ((angle >= PI_SLICE_DN1) && (angle <= PI_SLICE_DN3)) {
             return 3;
         }
-        if ( ( angle >= PI_SLICE_DN3) && ( angle <= PI_SLICE_DN5 ) ) {
+        if ((angle >= PI_SLICE_DN3) && (angle <= PI_SLICE_DN5)) {
             return 2;
         }
-        if ( ( angle >= PI_SLICE_DN5) && ( angle <= PI_SLICE_DN7 ) ) {
+        if ((angle >= PI_SLICE_DN5) && (angle <= PI_SLICE_DN7)) {
             return 1;
         }
-        if ( ( angle >= PI_SLICE_DN7) && ( angle <= PI_SLICE_DN8 ) ) {
+        if ((angle >= PI_SLICE_DN7) && (angle <= PI_SLICE_DN8)) {
             return 4;
         }
 
@@ -271,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateTextViews(int direction) {
 
         // left
-        switch(direction) {
+        switch (direction) {
             case 7:
             case 4:
             case 1:
@@ -281,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
                 textViewLt.setTextColor(0xFF808080);
         }
 
-        switch(direction) {
+        switch (direction) {
             case 7:
             case 8:
             case 9:
@@ -291,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
                 textViewUp.setTextColor(0xFF808080);
         }
 
-        switch(direction) {
+        switch (direction) {
             case 9:
             case 6:
             case 3:
@@ -301,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                 textViewRt.setTextColor(0xFF808080);
         }
 
-        switch(direction) {
+        switch (direction) {
             case 1:
             case 2:
             case 3:
@@ -329,42 +356,12 @@ public class MainActivity extends AppCompatActivity {
 
                 case MotionEvent.ACTION_MOVE:
                     updateDot(event.getX(), event.getY(), v.getWidth(), v.getHeight());
-                    int xPos = dotView.x + dotView.centerX;
-                    int yPos = dotView.y + dotView.centerY;
-                    if (yPos > 10) {
-                        if (xPos > 10) {
-                            robotForward();
-                            robotRight();
-                        } else {
-                            if (xPos < -10) {
-                                robotForward();
-                                robotLeft();
-                            } else {
-                                robotForward();
-                            }
-                        }
-                    } else {
-                            if (yPos < -10)
-                            {
-                                 if (xPos > 10) {
-                                    robotBackward();
-                                    robotRight();
-                                 } else {
-                                     if (xPos < -10) {
-                                         robotBackward();
-                                         robotLeft();
-                                     } else {
-                                         robotBackward();
-                                     }
-                                 }
-                            }else{
-                                     robotStop();
-                            }
-                    }
                     break;
 
                 case MotionEvent.ACTION_UP:
                     centerStick();
+                    robotStop();
+                    robot_command = STOP;
                     break;
 
                 default:
@@ -393,17 +390,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateDot(float x, float y, int width, int height) {
 
-//        if (TREAT_OUT_OF_BOUNDS_AS_CENTER) {
-//            if ( (x < 0) || (y < 0) || (x > width) || ( y > height ) ) {
-//                centerStick();
-//                return;
-//            }
-//        }
+        int quadrant = 0;
 
-        if ( analogCenterX == -1 ) {
+        if (analogCenterX == -1) {
             analogCenterX = width / 2;
         }
-        if ( analogCenterY == -1 ) {
+        if (analogCenterY == -1) {
             analogCenterY = height / 2;
         }
 
@@ -411,16 +403,96 @@ public class MainActivity extends AppCompatActivity {
         double xPos = x - analogCenterX;
         double yPos = y - analogCenterY;
 
-        if ( ( Math.abs(xPos) < analogDeadzoneInPx ) && ( Math.abs(yPos) < analogDeadzoneInPx ) ) {
+        if ((Math.abs(xPos) < analogDeadzoneInPx) && (Math.abs(yPos) < analogDeadzoneInPx)) {
             centerStick();
-            return;
+            return;         //do nothing
         }
 
         double sx = xPos / analogCenterX;
         double sy = yPos / analogCenterY;
 
+        double radians = Math.atan(Math.abs(sy/sx));
+
+        if (xPos >= 0.0) {
+            if (yPos >= 0.0)    //dot in 1st quadrant on circle
+            {
+                if (radians >=  Math.PI/4)      //robot forward area, dot > 45 degrees on circle
+                {
+                    if (robot_command != BACKWARD)   //not already going forward
+                    {
+                        robot_command = BACKWARD;
+                        robotBackward();
+                    }
+                }
+                else
+                {
+                    if (robot_command != RIGHT)   //not already going right
+                    {
+                        robot_command = RIGHT;
+                        robotRight();
+                    }
+                }
+            }
+            else    //dot is in 4th quadrant
+            {
+                if (radians >=  Math.PI/4)      //robot forward area, dot > 45 degrees on circle
+                {
+                    if (robot_command != FORWARD)   //not already going backward
+                    {
+                        robot_command = FORWARD;
+                        robotForward();
+                    }
+                }
+                else
+                {
+                    if (robot_command != RIGHT)   //not already going right
+                    {
+                        robot_command = RIGHT;
+                        robotRight();
+                    }
+                }
+            }
+        }else {
+            if (yPos >= 0.0) {                       //dot is in 2nd quadrant
+                if (radians >= Math.PI / 4)      //robot forward area, dot > 45 degrees on circle
+                {
+                    if (robot_command != BACKWARD)   //not already going forward
+                    {
+                        robot_command = BACKWARD;
+                        robotBackward();
+                    }
+                } else {
+                    if (robot_command != LEFT)   //not already going left
+                    {
+                        robot_command = LEFT;
+                        robotLeft();
+                    }
+                }
+            }else{                              //dot is in 3rd quadrant
+                if (radians >=  Math.PI/4)      //robot forward area, dot > 45 degrees on circle
+                {
+                    if (robot_command != FORWARD)   //not already going forward
+                    {
+                        robot_command = FORWARD;
+                        robotForward();
+                    }
+                }
+                else
+                {
+                    if (robot_command != LEFT)   //not already going left
+                    {
+                        robot_command = LEFT;
+                        robotLeft();
+                    }
+                }
+
+            }
+        }
+
         Log.v("---", sx + ", " + sy);
 
-        dotView.updateCoordinatesViaStick((float)sx, (float)sy);
+        dotView.updateCoordinatesViaStick((float) sx, (float) sy);
+
+        return;
     }
 }

@@ -46,26 +46,21 @@
 		<android.support.v7.widget.Toolbar
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
-			android:layout_height="?attr/actionBarSize"
+			android:layout_height="wrap_content"
 			android:background="?attr/colorPrimary"
-			app:popupTheme="@style/AppTheme.PopupOverlay"/>
+			app:popupTheme="@style/AppTheme.PopupOverlay" />
 
 	</android.support.design.widget.AppBarLayout>
 
-	<ImageView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_alignParentBottom="true"
-		android:layout_centerHorizontal="true"
-		android:layout_marginBottom="8dp"
-		android:src="@drawable/background_title"/>
-
 	<ScrollView
 		android:id="@+id/device_container"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_below="@+id/appbar_layout"
-		android:visibility="gone">
+		android:layout_width="wrap_content"
+		android:layout_height="514dp"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentStart="true"
+		android:clipToPadding="false"
+		android:fillViewport="false"
+		android:visibility="visible">
 
 		<LinearLayout
 			android:layout_width="match_parent"
@@ -91,7 +86,7 @@
 					android:text="Switch direction"
 					tools:checked="true" />
 
-                <LinearLayout
+				<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:layout_weight="1"
@@ -105,14 +100,19 @@
 						android:text="Buzzer"
 						android:visibility="visible" />
 
-                    <Button
-                        android:id="@+id/stop"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Stop"
-                        android:visibility="visible" />
-                </LinearLayout>
+					<Button
+						android:id="@+id/stop"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_weight="1"
+						android:text="Stop"
+						android:visibility="visible" />
+				</LinearLayout>
+
+				<View
+					android:layout_width="match_parent"
+					android:layout_height="20dp"
+					android:background="@android:color/darker_gray"/>
 
 				<LinearLayout
 					android:layout_width="match_parent"
@@ -127,7 +127,7 @@
 						android:text="Forward"
 						android:visibility="visible" />
 
-                    <Button
+					<Button
 						android:id="@+id/backward"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -136,6 +136,11 @@
 						android:visibility="visible" />
 
 				</LinearLayout>
+
+				<View
+					android:layout_width="match_parent"
+					android:layout_height="20dp"
+					android:background="@android:color/darker_gray"/>
 
 				<LinearLayout
 					android:layout_width="match_parent"
@@ -160,7 +165,12 @@
 						android:visibility="visible" />
 				</LinearLayout>
 
-				<LinearLayout
+				<View
+					android:layout_width="match_parent"
+					android:layout_height="20dp"
+					android:background="@android:color/darker_gray"/>
+
+							<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:layout_weight="1"
@@ -181,15 +191,14 @@
 						android:layout_weight="1"
 						android:text="Ambient" />
 
-					<Button
-						android:id="@+id/speech"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Speech" />
 				</LinearLayout>
 
-				<LinearLayout
+				<View
+					android:layout_width="match_parent"
+					android:layout_height="20dp"
+					android:background="@android:color/darker_gray"/>
+
+							<LinearLayout
 					android:layout_width="match_parent"
 					android:layout_height="match_parent"
 					android:orientation="horizontal">
@@ -211,11 +220,11 @@
 						android:visibility="visible" />
 
 					<Button
-						android:id="@+id/step_mode"
+						android:id="@+id/submenu"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_weight="1"
-						android:text="Step Mode"
+						android:text="Speed"
 						android:visibility="visible" />
 
 					<Button
@@ -234,45 +243,6 @@
 						android:text="Fotovore"
 						android:visibility="visible" />
 
-                </LinearLayout>
-
-				<LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-					<Button
-						android:id="@+id/record_pi"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Record Pi"
-						android:visibility="visible" />
-
-					<Button
-						android:id="@+id/record"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="record"
-						android:visibility="visible" />
-
-                    <Button
-                        android:id="@+id/play"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Play"
-                        android:visibility="visible" />
-
-					<Button
-						android:id="@+id/con_dis"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
-						android:layout_weight="1"
-						android:text="Con/Dis"
-						android:visibility="visible" />
 				</LinearLayout>
 
 			</LinearLayout>
@@ -330,12 +300,11 @@
 		android:padding="@dimen/activity_horizontal_margin">
 
 		<TextView
-			android:id="@+id/connection_state"
+			android:id="@+id/sep2"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:gravity="center_horizontal"
-			android:textSize="16sp"
-			tools:text="@string/state_connecting"/>
+			android:textSize="16sp" />
 
 		<ProgressBar
 			android:id="@+id/progress_bar"
@@ -344,4 +313,5 @@
 			android:layout_height="wrap_content"
 			android:indeterminate="true"/>
 	</LinearLayout>
+
 </RelativeLayout>

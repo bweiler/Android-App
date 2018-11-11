@@ -38,6 +38,7 @@ import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProvider;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import no.nordicsemi.android.blinky.R;
 import no.nordicsemi.android.blinky.adapter.ExtendedBluetoothDevice;
@@ -125,6 +126,11 @@ public class BlinkyViewModel extends AndroidViewModel implements BlinkyManagerCa
 	public void sendCMD(final Byte cmd) {
 		mBlinkyManager.send(cmd);
 		mCMDState.setValue(cmd);
+	}
+
+	public void send4Byte(final byte[] data) {
+		mBlinkyManager.send4(data);
+		mBYTE4State.setValue(data);
 	}
 
 	public void read20bytedata() {
